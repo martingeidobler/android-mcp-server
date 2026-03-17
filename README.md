@@ -6,7 +6,7 @@
 
 MCP server for controlling Android emulators and devices via ADB. Gives AI assistants the ability to see, interact with, and debug Android apps — taking screenshots, tapping elements, reading logs, and documenting bugs.
 
-[npm Package](https://www.npmjs.com/package/android-mcp-server) | [GitHub](https://github.com/anthropics/android-mcp-server) | [Issues](https://github.com/anthropics/android-mcp-server/issues)
+[npm Package](https://www.npmjs.com/package/android-mcp-server) | [GitHub](https://github.com/martingeidobler/android-mcp-server) | [Issues](https://github.com/martingeidobler/android-mcp-server/issues)
 
 ## Features
 
@@ -170,7 +170,7 @@ Add to your project's `.mcp.json` (checked into version control so your team get
 <summary><b>Build from source</b></summary>
 
 ```bash
-git clone https://github.com/anthropics/android-mcp-server.git
+git clone https://github.com/martingeidobler/android-mcp-server.git
 cd android-mcp-server
 npm install
 npm run build

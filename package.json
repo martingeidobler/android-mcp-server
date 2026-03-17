@@ -15,6 +15,8 @@
     "start": "node dist/index.js",
     "dev": "tsc --watch",
     "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -33,13 +35,13 @@
   ],
   "author": "Martin Geidobler",
   "license": "MIT",
-  "homepage": "https://github.com/anthropics/android-mcp-server#readme",
+  "homepage": "https://github.com/martingeidobler/android-mcp-server#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anthropics/android-mcp-server.git"
+    "url": "git+https://github.com/martingeidobler/android-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/anthropics/android-mcp-server/issues"
+    "url": "https://github.com/martingeidobler/android-mcp-server/issues"
   },
   "engines": {
     "node": ">=18"
@@ -52,6 +54,7 @@
     "@types/node": "^22.0.0",
     "eslint": "^10.0.3",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.57.1",
+    "vitest": "^4.1.0"
   }
 }

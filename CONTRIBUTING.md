@@ -11,7 +11,7 @@ Thanks for your interest in contributing to Android MCP Server!
 ## Getting started
 
 ```bash
-git clone https://github.com/anthropics/android-mcp-server.git
+git clone https://github.com/martingeidobler/android-mcp-server.git
 cd android-mcp-server
 npm install
 npm run build
@@ -53,7 +53,7 @@ Please keep PRs focused — one feature or fix per PR.
 
 ## Reporting issues
 
-Use [GitHub Issues](https://github.com/anthropics/android-mcp-server/issues) to report bugs or request features. Include:
+Use [GitHub Issues](https://github.com/martingeidobler/android-mcp-server/issues) to report bugs or request features. Include:
 
 - What you expected to happen
 - What actually happened

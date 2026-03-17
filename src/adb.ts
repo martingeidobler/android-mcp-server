@@ -22,7 +22,7 @@ export interface UiElement {
   scrollable: boolean;
 }
 
-function discoverPath(toolRelativePath: string, fallbackName: string): string {
+export function discoverPath(toolRelativePath: string, fallbackName: string): string {
   const androidHome = process.env.ANDROID_HOME;
   if (androidHome) {
     const p = join(androidHome, toolRelativePath);
@@ -33,7 +33,7 @@ function discoverPath(toolRelativePath: string, fallbackName: string): string {
   return fallbackName;
 }
 
-function parseBounds(boundsStr: string): { x: number; y: number; width: number; height: number } | null {
+export function parseBounds(boundsStr: string): { x: number; y: number; width: number; height: number } | null {
   const match = boundsStr.match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
   if (!match) return null;
   const left = parseInt(match[1], 10);
@@ -43,7 +43,7 @@ function parseBounds(boundsStr: string): { x: number; y: number; width: number; 
   return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
-function escapeShellText(text: string): string {
+export function escapeShellText(text: string): string {
   return text
     .replace(/\\/g, "\\\\")
     .replace(/ /g, "%s")
@@ -162,7 +162,7 @@ export class Adb {
     return this.parseUiXml(xml);
   }
 
-  private parseUiXml(xml: string): UiElement[] {
+  parseUiXml(xml: string): UiElement[] {
     const elements: UiElement[] = [];
     const nodeRegex = /<node\s[^>]*?\/?>/g;
     let match: RegExpExecArray | null;
