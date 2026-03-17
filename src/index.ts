@@ -220,6 +220,75 @@ server.tool(
 );
 
 server.tool(
+  "tap_and_wait",
+  "Tap element then wait for UI to settle and return the new UI tree. Combines tap + wait + get_ui_tree into a single fast operation.",
+  {
+    by: z
+      .enum(["resource-id", "text", "content-desc"])
+      .describe("How to find the element to tap"),
+    value: z.string().describe("Value to match"),
+    wait_ms: z.number().optional().default(1000).describe("Time to wait for UI to settle after tap (default 1000ms)"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ by, value, wait_ms, device_id }) => {
+    const elements = await adb.getUiTree(device_id);
+    const finder: Record<string, (el: (typeof elements)[0]) => boolean> = {
+      "resource-id": (el) => el.resourceId === value || el.resourceId.endsWith(`:id/${value}`),
+      text: (el) => el.text === value || el.text.toLowerCase().includes(value.toLowerCase()),
+      "content-desc": (el) =>
+        el.contentDesc === value ||
+        el.contentDesc.toLowerCase().includes(value.toLowerCase()),
+    };
+
+    const el = elements.find(finder[by]);
+    if (!el) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Element not found: ${by}="${value}". Available elements:\n${elements
+              .filter((e) => e.clickable)
+              .map((e) => `  id:${e.resourceId} text:"${e.text}" desc:"${e.contentDesc}"`)
+              .join("\n")}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    await adb.tap(el.center.x, el.center.y, device_id);
+    await new Promise((r) => setTimeout(r, wait_ms));
+
+    const newElements = await adb.getUiTree(device_id);
+    const summary = newElements.map((newEl, i) => {
+      const parts: string[] = [`[${i}]`];
+      if (newEl.resourceId) parts.push(`id:${newEl.resourceId}`);
+      if (newEl.text) parts.push(`text:"${newEl.text}"`);
+      if (newEl.contentDesc) parts.push(`desc:"${newEl.contentDesc}"`);
+      parts.push(`class:${newEl.className.split(".").pop()}`);
+      parts.push(`center:(${newEl.center.x},${newEl.center.y})`);
+      const flags: string[] = [];
+      if (newEl.clickable) flags.push("clickable");
+      if (newEl.scrollable) flags.push("scrollable");
+      if (newEl.checked) flags.push("checked");
+      if (newEl.focused) flags.push("focused");
+      if (!newEl.enabled) flags.push("disabled");
+      if (flags.length) parts.push(`[${flags.join(",")}]`);
+      return parts.join(" ");
+    });
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Tapped "${by}=${value}" at (${el.center.x}, ${el.center.y}) [${el.className.split(".").pop()}]\n\nNew UI (${newElements.length} elements):\n\n${summary.join("\n")}`,
+        },
+      ],
+    };
+  },
+);
+
+server.tool(
   "type_text",
   "Type text into the currently focused input field",
   {

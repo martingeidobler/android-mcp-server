@@ -13,7 +13,7 @@ MCP server for controlling Android emulators and devices via ADB. Gives AI assis
 
 ## Features
 
-- **20 tools** for complete Android device control
+- **21 tools** for complete Android device control
 - **Screenshot capture** with intelligent compression (Sharp-based, max 1280px)
 - **UI tree inspection** — read element hierarchy with bounds, text, resource IDs, and state
 - **Touch automation** — tap, swipe, scroll, type text, press hardware keys
@@ -21,6 +21,9 @@ MCP server for controlling Android emulators and devices via ADB. Gives AI assis
 - **App lifecycle** — install APKs, launch apps, inspect current activity
 - **Logcat integration** — filter by package, log level, or timestamp
 - **Device management** — list devices, start emulators, get device info
+- **Compound actions** — `tap_and_wait` combines tap + settle + UI tree in one round trip
+- **Persistent ADB shell** — reuses a single shell session for faster command execution
+- **Device info caching** — queries device properties once per session
 - **Multi-device support** — target specific devices by ID
 - **Zero app modifications** — works with any Android app via ADB, no SDK integration needed
 
@@ -202,6 +205,7 @@ claude mcp add --scope user android -- node /path/to/android-mcp-server/dist/ind
 |------|-------------|
 | `tap` | Tap at screen coordinates |
 | `tap_element` | Tap element by resource-id, text, or content-desc |
+| `tap_and_wait` | Tap element, wait for UI to settle, return new UI tree — single round trip |
 | `type_text` | Type text into focused input |
 | `press_key` | Press key (back, home, enter, tab, delete, menu, etc.) |
 | `swipe` | Swipe gesture between coordinates |

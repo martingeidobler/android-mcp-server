@@ -63,13 +63,97 @@ export function escapeShellText(text: string): string {
 export class Adb {
   private adbPath: string;
   private emulatorPath: string;
+  private deviceInfoCache = new Map<string, {
+    model: string;
+    manufacturer: string;
+    androidVersion: string;
+    apiLevel: string;
+    screenSize: string;
+    density: string;
+  }>();
+  private persistentShells = new Map<string, {
+    process: ReturnType<typeof spawn>;
+    pending: Array<{ resolve: (value: string) => void; reject: (reason: Error) => void; output: string }>;
+  }>();
 
   constructor() {
     this.adbPath = discoverPath(join("platform-tools", "adb"), "adb");
     this.emulatorPath = discoverPath(join("emulator", "emulator"), "emulator");
   }
 
+  private getShellKey(deviceId?: string): string {
+    return deviceId ?? "__default__";
+  }
+
+  private getPersistentShell(deviceId?: string): {
+    process: ReturnType<typeof spawn>;
+    pending: Array<{ resolve: (value: string) => void; reject: (reason: Error) => void; output: string }>;
+  } {
+    const key = this.getShellKey(deviceId);
+    const existing = this.persistentShells.get(key);
+    if (existing && existing.process.exitCode === null) return existing;
+
+    const args = deviceId ? ["-s", deviceId, "shell"] : ["shell"];
+    const proc = spawn(this.adbPath, args, { stdio: ["pipe", "pipe", "pipe"] });
+
+    const entry = {
+      process: proc,
+      pending: [] as Array<{ resolve: (value: string) => void; reject: (reason: Error) => void; output: string }>,
+    };
+
+    let buffer = "";
+    proc.stdout!.on("data", (chunk: Buffer) => {
+      buffer += chunk.toString();
+      const markerIdx = buffer.indexOf("__MCP_DONE__");
+      if (markerIdx !== -1) {
+        const output = buffer.substring(0, markerIdx).trimEnd();
+        buffer = buffer.substring(markerIdx + "__MCP_DONE__\n".length);
+        const req = entry.pending.shift();
+        if (req) req.resolve(output);
+      }
+    });
+
+    proc.stderr!.on("data", (chunk: Buffer) => {
+      const req = entry.pending[0];
+      if (req) req.output += chunk.toString();
+    });
+
+    proc.on("close", () => {
+      this.persistentShells.delete(key);
+      for (const req of entry.pending) {
+        req.reject(new Error("Persistent shell closed unexpectedly"));
+      }
+      entry.pending.length = 0;
+    });
+
+    this.persistentShells.set(key, entry);
+    return entry;
+  }
+
+  async shellExec(command: string, deviceId?: string): Promise<string> {
+    const shell = this.getPersistentShell(deviceId);
+    return new Promise<string>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const idx = shell.pending.indexOf(entry);
+        if (idx !== -1) shell.pending.splice(idx, 1);
+        reject(new Error(`Shell command timed out: ${command}`));
+      }, 10_000);
+
+      const entry = {
+        resolve: (value: string) => { clearTimeout(timer); resolve(value); },
+        reject: (reason: Error) => { clearTimeout(timer); reject(reason); },
+        output: "",
+      };
+      shell.pending.push(entry);
+      shell.process.stdin!.write(`${command}; echo __MCP_DONE__\n`);
+    });
+  }
+
   async exec(args: string[], deviceId?: string): Promise<string> {
+    // Use persistent shell for shell commands
+    if (args[0] === "shell" && args.length >= 2) {
+      return this.shellExec(args.slice(1).join(" "), deviceId);
+    }
     const fullArgs = deviceId ? ["-s", deviceId, ...args] : args;
     const { stdout } = await execFileAsync(this.adbPath, fullArgs, {
       timeout: 10_000,
@@ -351,6 +435,10 @@ export class Adb {
     screenSize: string;
     density: string;
   }> {
+    const cacheKey = this.getShellKey(deviceId);
+    const cached = this.deviceInfoCache.get(cacheKey);
+    if (cached) return cached;
+
     const [model, manufacturer, androidVersion, apiLevel, sizeOutput, densityOutput] =
       await Promise.all([
         this.exec(["shell", "getprop", "ro.product.model"], deviceId),
@@ -364,7 +452,7 @@ export class Adb {
     const sizeMatch = sizeOutput.match(/(\d+x\d+)/);
     const densityMatch = densityOutput.match(/(\d+)/);
 
-    return {
+    const info = {
       model: model.trim(),
       manufacturer: manufacturer.trim(),
       androidVersion: androidVersion.trim(),
@@ -372,5 +460,8 @@ export class Adb {
       screenSize: sizeMatch?.[1] ?? "unknown",
       density: densityMatch?.[1] ?? "unknown",
     };
+
+    this.deviceInfoCache.set(cacheKey, info);
+    return info;
   }
 }

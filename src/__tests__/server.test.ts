@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 describe("MCP Server Tool Registration", () => {
-  it("should register all 20 expected tools", async () => {
+  it("should register all 21 expected tools", async () => {
     // Import the server module to trigger tool registration
     // Note: We can't directly test the server instance from index.ts,
     // so we'll create a minimal test to verify the expected tools exist
@@ -14,6 +14,7 @@ describe("MCP Server Tool Registration", () => {
       "get_ui_tree",
       "tap",
       "tap_element",
+      "tap_and_wait",
       "type_text",
       "press_key",
       "swipe",
@@ -29,11 +30,11 @@ describe("MCP Server Tool Registration", () => {
       "pull_file",
     ];
 
-    expect(expectedTools).toHaveLength(20);
+    expect(expectedTools).toHaveLength(21);
 
     // Verify all tool names are unique
     const uniqueTools = new Set(expectedTools);
-    expect(uniqueTools.size).toBe(20);
+    expect(uniqueTools.size).toBe(21);
 
     // Verify naming conventions (all lowercase with underscores)
     for (const toolName of expectedTools) {
@@ -47,6 +48,7 @@ describe("MCP Server Tool Registration", () => {
     const interactionTools = [
       "tap",
       "tap_element",
+      "tap_and_wait",
       "type_text",
       "press_key",
       "swipe",
@@ -69,7 +71,7 @@ describe("MCP Server Tool Registration", () => {
       ...diagnosticsTools,
     ];
 
-    expect(allTools).toHaveLength(20);
+    expect(allTools).toHaveLength(21);
   });
 
   it("should create MCP server instance successfully", () => {
