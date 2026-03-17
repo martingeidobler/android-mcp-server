@@ -14,6 +14,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
+    "lint": "eslint src/",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -23,13 +24,22 @@
     "emulator",
     "claude",
     "testing",
-    "model-context-protocol"
+    "model-context-protocol",
+    "ui-testing",
+    "screenshot",
+    "automation",
+    "device",
+    "appium-alternative"
   ],
   "author": "Martin Geidobler",
   "license": "MIT",
+  "homepage": "https://github.com/anthropics/android-mcp-server#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/martingeidobler/android-mcp-server"
+    "url": "git+https://github.com/anthropics/android-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anthropics/android-mcp-server/issues"
   },
   "engines": {
     "node": ">=18"
@@ -40,6 +50,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.7.0"
+    "eslint": "^10.0.3",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.57.1"
   }
 }

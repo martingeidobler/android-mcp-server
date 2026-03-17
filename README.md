@@ -1,6 +1,25 @@
 # Android MCP Server
 
-MCP server for controlling Android emulators and devices via ADB. Gives Claude Code the ability to see, interact with, and debug Android apps — taking screenshots, tapping elements, reading logs, and documenting bugs.
+[![npm version](https://img.shields.io/npm/v/android-mcp-server)](https://www.npmjs.com/package/android-mcp-server)
+[![npm downloads](https://img.shields.io/npm/dw/android-mcp-server)](https://www.npmjs.com/package/android-mcp-server)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+MCP server for controlling Android emulators and devices via ADB. Gives AI assistants the ability to see, interact with, and debug Android apps — taking screenshots, tapping elements, reading logs, and documenting bugs.
+
+[npm Package](https://www.npmjs.com/package/android-mcp-server) | [GitHub](https://github.com/anthropics/android-mcp-server) | [Issues](https://github.com/anthropics/android-mcp-server/issues)
+
+## Features
+
+- **20 tools** for complete Android device control
+- **Screenshot capture** with intelligent compression (Sharp-based, max 1280px)
+- **UI tree inspection** — read element hierarchy with bounds, text, resource IDs, and state
+- **Touch automation** — tap, swipe, scroll, type text, press hardware keys
+- **Element targeting** — find and tap elements by resource-id, text, or content-desc
+- **App lifecycle** — install APKs, launch apps, inspect current activity
+- **Logcat integration** — filter by package, log level, or timestamp
+- **Device management** — list devices, start emulators, get device info
+- **Multi-device support** — target specific devices by ID
+- **Zero app modifications** — works with any Android app via ADB, no SDK integration needed
 
 ## Prerequisites
 
@@ -22,20 +41,112 @@ ls ~/Library/Android/sdk/platform-tools/adb
 
 ## Setup
 
-### Option 1: Claude Code CLI
+<details>
+<summary><b>Claude Code</b></summary>
 
 ```bash
-claude mcp add --scope user --transport stdio android -- npx -y android-mcp-server
+claude mcp add --scope user android -- npx -y android-mcp-server
 ```
 
 This registers the server globally so it's available in all projects. Use `--scope project` instead to limit it to the current project.
 
 If your SDK is not in the default location:
 ```bash
-claude mcp add --scope user --transport stdio --env ANDROID_HOME=/path/to/sdk android -- npx -y android-mcp-server
+claude mcp add --scope user --env ANDROID_HOME=/path/to/sdk android -- npx -y android-mcp-server
 ```
 
-### Option 2: Project config (.mcp.json)
+</details>
+
+<details>
+<summary><b>Claude Desktop</b></summary>
+
+Add to your Claude Desktop config file:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "npx",
+      "args": ["-y", "android-mcp-server"],
+      "env": {
+        "ANDROID_HOME": "/path/to/android/sdk"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>VS Code</b></summary>
+
+Add to your VS Code settings (`.vscode/settings.json`):
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "android": {
+        "command": "npx",
+        "args": ["-y", "android-mcp-server"],
+        "env": {
+          "ANDROID_HOME": "/path/to/android/sdk"
+        }
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Cursor</b></summary>
+
+Add to your Cursor MCP config (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "npx",
+      "args": ["-y", "android-mcp-server"],
+      "env": {
+        "ANDROID_HOME": "/path/to/android/sdk"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Windsurf</b></summary>
+
+Add to your Windsurf MCP config (`~/.codeium/windsurf/mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "npx",
+      "args": ["-y", "android-mcp-server"],
+      "env": {
+        "ANDROID_HOME": "/path/to/android/sdk"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Project config (.mcp.json)</b></summary>
 
 Add to your project's `.mcp.json` (checked into version control so your team gets it too):
 
@@ -53,15 +164,20 @@ Add to your project's `.mcp.json` (checked into version control so your team get
 }
 ```
 
-### Option 3: Build from source
+</details>
+
+<details>
+<summary><b>Build from source</b></summary>
 
 ```bash
-git clone https://github.com/martingeidobler/android-mcp-server.git
+git clone https://github.com/anthropics/android-mcp-server.git
 cd android-mcp-server
 npm install
 npm run build
-claude mcp add --scope user --transport stdio android -- node /path/to/android-mcp-server/dist/index.js
+claude mcp add --scope user android -- node /path/to/android-mcp-server/dist/index.js
 ```
+
+</details>
 
 ## Available Tools
 
@@ -127,8 +243,12 @@ Claude will: `install_apk` → `launch_app` → navigate with `tap_element` → 
 
 ## How It Works
 
-The server communicates with Claude Code over stdio using the [Model Context Protocol](https://modelcontextprotocol.io). All device interaction goes through ADB — no modifications to your app are required. Screenshots are captured in memory, compressed, and returned as base64 images that Claude can see and analyze visually.
+The server communicates over stdio using the [Model Context Protocol](https://modelcontextprotocol.io). All device interaction goes through ADB — no modifications to your app are required. Screenshots are captured in memory, compressed, and returned as base64 images that the AI can see and analyze visually.
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT - see [LICENSE](LICENSE). Free to use, modify, and distribute. Attribution required.
+MIT - see [LICENSE](LICENSE).

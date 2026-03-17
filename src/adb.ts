@@ -71,7 +71,7 @@ export class Adb {
 
   async exec(args: string[], deviceId?: string): Promise<string> {
     const fullArgs = deviceId ? ["-s", deviceId, ...args] : args;
-    const { stdout, stderr } = await execFileAsync(this.adbPath, fullArgs, {
+    const { stdout } = await execFileAsync(this.adbPath, fullArgs, {
       timeout: 10_000,
       maxBuffer: 50 * 1024 * 1024,
     });
