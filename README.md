@@ -8,6 +8,8 @@ MCP server for controlling Android emulators and devices via ADB. Gives AI assis
 
 [npm Package](https://www.npmjs.com/package/android-mcp-server) | [GitHub](https://github.com/martingeidobler/android-mcp-server) | [Issues](https://github.com/martingeidobler/android-mcp-server/issues)
 
+![ezgif-3bbb68e918812643](https://github.com/user-attachments/assets/d78ef5ac-c401-4249-9776-4eda86cd4020)
+
 ## Features
 
 - **20 tools** for complete Android device control
