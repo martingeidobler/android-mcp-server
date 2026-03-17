@@ -1,6 +1,6 @@
 # Android MCP Server
 
-MCP server for controlling Android emulators and devices via ADB. Designed for use with Claude Code to enable automated manual testing — navigating apps, taking screenshots, and visually verifying UI flows.
+MCP server for controlling Android emulators and devices via ADB. Gives Claude Code the ability to see, interact with, and debug Android apps — taking screenshots, tapping elements, reading logs, and documenting bugs.
 
 ## Prerequisites
 
@@ -8,32 +8,60 @@ MCP server for controlling Android emulators and devices via ADB. Designed for u
 - Android SDK with platform-tools (ADB) and emulator
 - A running Android emulator or connected device
 
-## Install
+### Finding your ANDROID_HOME
 
+The server auto-discovers the SDK at `~/Library/Android/sdk` (macOS) or via `ANDROID_HOME`. If your SDK is elsewhere, set `ANDROID_HOME` in the MCP config (see below).
+
+To check:
 ```bash
-npm install
-npm run build
+# macOS
+ls ~/Library/Android/sdk/platform-tools/adb
+
+# Or find it via Android Studio: Settings > Languages & Frameworks > Android SDK
 ```
 
-## Configure in Claude Code
+## Setup
 
-Add to your project's `.mcp.json`:
+### Option 1: Claude Code CLI
+
+```bash
+claude mcp add --scope user --transport stdio android -- npx -y android-mcp-server
+```
+
+This registers the server globally so it's available in all projects. Use `--scope project` instead to limit it to the current project.
+
+If your SDK is not in the default location:
+```bash
+claude mcp add --scope user --transport stdio --env ANDROID_HOME=/path/to/sdk android -- npx -y android-mcp-server
+```
+
+### Option 2: Project config (.mcp.json)
+
+Add to your project's `.mcp.json` (checked into version control so your team gets it too):
 
 ```json
 {
   "mcpServers": {
     "android": {
-      "command": "node",
-      "args": ["/absolute/path/to/android-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "android-mcp-server"],
       "env": {
-        "ANDROID_HOME": "/Users/yourname/Library/Android/sdk"
+        "ANDROID_HOME": "/path/to/android/sdk"
       }
     }
   }
 }
 ```
 
-Or in `~/.claude/settings.json` for global access.
+### Option 3: Build from source
+
+```bash
+git clone https://github.com/martingeidobler/android-mcp-server.git
+cd android-mcp-server
+npm install
+npm run build
+claude mcp add --scope user --transport stdio android -- node /path/to/android-mcp-server/dist/index.js
+```
 
 ## Available Tools
 
@@ -47,8 +75,8 @@ Or in `~/.claude/settings.json` for global access.
 ### Screenshot & UI Analysis
 | Tool | Description |
 |------|-------------|
-| `screenshot` | Take screenshot, returns image for visual analysis |
-| `get_ui_tree` | Get UI element hierarchy with bounds, text, IDs |
+| `screenshot` | Take screenshot for visual analysis. Optional `save_path` to save to disk |
+| `get_ui_tree` | Get UI element hierarchy with bounds, text, resource IDs, and state |
 
 ### Interaction
 | Tool | Description |
@@ -56,10 +84,17 @@ Or in `~/.claude/settings.json` for global access.
 | `tap` | Tap at screen coordinates |
 | `tap_element` | Tap element by resource-id, text, or content-desc |
 | `type_text` | Type text into focused input |
-| `press_key` | Press key (back, home, enter, etc.) |
+| `press_key` | Press key (back, home, enter, tab, delete, menu, etc.) |
 | `swipe` | Swipe gesture between coordinates |
 | `scroll_to_element` | Scroll until element is visible |
 | `wait_for_element` | Wait for element to appear (with timeout) |
+
+### Diagnostics
+| Tool | Description |
+|------|-------------|
+| `get_logs` | Get logcat output, filterable by package, log level, and time |
+| `clear_logs` | Clear logcat buffer (call before reproducing a bug for clean output) |
+| `get_device_info` | Get model, Android version, API level, screen size, DPI |
 
 ### App Management
 | Tool | Description |
@@ -67,12 +102,33 @@ Or in `~/.claude/settings.json` for global access.
 | `launch_app` | Launch app by package name |
 | `install_apk` | Install APK file |
 | `get_current_activity` | Get foreground app and activity |
+| `pull_file` | Pull a file from the device to local filesystem |
 | `adb_shell` | Run arbitrary ADB shell command |
 
-## Usage with Claude Code
+## Example Workflows
 
-Once configured, ask Claude to test your app:
+### Bug documentation
 
-> "Open the app on the emulator, navigate through the login flow, and check if it matches the Jira ticket PROJ-123"
+> "Clear the logs, open the settings screen, tap the save button, then show me the logs and a screenshot"
 
-Claude will use `screenshot` + `get_ui_tree` to see and understand the screen, `tap_element`/`type_text` to interact, and its vision capabilities to compare against mockups.
+Claude will: `clear_logs` → `launch_app` → `tap_element` → `get_logs(package_name="com.example.app", level="E")` → `screenshot(save_path="./bugs/settings-crash.png")`
+
+### UI testing
+
+> "Navigate through the login flow and verify each screen matches the designs"
+
+Claude will use `screenshot` + `get_ui_tree` to see and understand each screen, `tap_element`/`type_text` to interact, and its vision capabilities to compare against mockups or descriptions.
+
+### Smoke testing
+
+> "Install the APK, launch the app, and tap through the main screens to check nothing crashes"
+
+Claude will: `install_apk` → `launch_app` → navigate with `tap_element` → `get_logs(level="E")` to check for errors after each screen.
+
+## How It Works
+
+The server communicates with Claude Code over stdio using the [Model Context Protocol](https://modelcontextprotocol.io). All device interaction goes through ADB — no modifications to your app are required. Screenshots are captured in memory, compressed, and returned as base64 images that Claude can see and analyze visually.
+
+## License
+
+MIT - see [LICENSE](LICENSE). Free to use, modify, and distribute. Attribution required.

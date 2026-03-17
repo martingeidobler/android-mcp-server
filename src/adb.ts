@@ -1,7 +1,8 @@
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { writeFile, mkdir } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 
 const execFileAsync = promisify(execFile);
@@ -273,5 +274,103 @@ export class Adb {
 
   async shell(command: string, deviceId?: string): Promise<string> {
     return this.exec(["shell", command], deviceId);
+  }
+
+  async getLogcat(
+    options: {
+      packageName?: string;
+      level?: string;
+      lines?: number;
+      since?: string;
+      deviceId?: string;
+    } = {},
+  ): Promise<string> {
+    const { packageName, level, lines = 200, since, deviceId } = options;
+    const args: string[] = ["logcat", "-d"];
+
+    if (since) {
+      args.push("-T", since);
+    } else {
+      args.push("-t", String(lines));
+    }
+
+    if (level) {
+      args.push("*:" + level.toUpperCase());
+    }
+
+    let output = await this.exec(args, deviceId);
+
+    if (packageName) {
+      const pidOutput = await this.exec(["shell", "pidof", packageName], deviceId).catch(() => "");
+      const pids = pidOutput.trim().split(/\s+/).filter(Boolean);
+      if (pids.length > 0) {
+        const pidSet = new Set(pids);
+        output = output
+          .split("\n")
+          .filter((line) => {
+            const pidMatch = line.match(/^\S+\s+\S+\s+(\d+)\s/);
+            return pidMatch && pidSet.has(pidMatch[1]);
+          })
+          .join("\n");
+      }
+    }
+
+    return output;
+  }
+
+  async clearLogcat(deviceId?: string): Promise<void> {
+    await this.exec(["logcat", "-c"], deviceId);
+  }
+
+  async pullFile(remotePath: string, localPath: string, deviceId?: string): Promise<string> {
+    const dir = dirname(localPath);
+    await mkdir(dir, { recursive: true });
+    const fullArgs = deviceId
+      ? ["-s", deviceId, "pull", remotePath, localPath]
+      : ["pull", remotePath, localPath];
+    const { stdout } = await execFileAsync(this.adbPath, fullArgs, {
+      timeout: 30_000,
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    return stdout;
+  }
+
+  async saveScreenshot(buffer: Buffer, savePath: string): Promise<void> {
+    const dir = dirname(savePath);
+    await mkdir(dir, { recursive: true });
+    await writeFile(savePath, buffer);
+  }
+
+  async getDeviceInfo(
+    deviceId?: string,
+  ): Promise<{
+    model: string;
+    manufacturer: string;
+    androidVersion: string;
+    apiLevel: string;
+    screenSize: string;
+    density: string;
+  }> {
+    const [model, manufacturer, androidVersion, apiLevel, sizeOutput, densityOutput] =
+      await Promise.all([
+        this.exec(["shell", "getprop", "ro.product.model"], deviceId),
+        this.exec(["shell", "getprop", "ro.product.manufacturer"], deviceId),
+        this.exec(["shell", "getprop", "ro.build.version.release"], deviceId),
+        this.exec(["shell", "getprop", "ro.build.version.sdk"], deviceId),
+        this.exec(["shell", "wm", "size"], deviceId),
+        this.exec(["shell", "wm", "density"], deviceId),
+      ]);
+
+    const sizeMatch = sizeOutput.match(/(\d+x\d+)/);
+    const densityMatch = densityOutput.match(/(\d+)/);
+
+    return {
+      model: model.trim(),
+      manufacturer: manufacturer.trim(),
+      androidVersion: androidVersion.trim(),
+      apiLevel: apiLevel.trim(),
+      screenSize: sizeMatch?.[1] ?? "unknown",
+      density: densityMatch?.[1] ?? "unknown",
+    };
   }
 }

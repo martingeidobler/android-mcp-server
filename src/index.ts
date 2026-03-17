@@ -93,20 +93,28 @@ server.tool(
 
 server.tool(
   "screenshot",
-  "Take a screenshot of the Android device. Returns the image for visual analysis.",
-  { device_id: z.string().optional().describe("Device ID (optional if only one device)") },
-  async ({ device_id }) => {
+  "Take a screenshot of the Android device. Returns the image for visual analysis. Optionally saves to a file path.",
+  {
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+    save_path: z.string().optional().describe("Local file path to save the screenshot PNG (optional)"),
+  },
+  async ({ device_id, save_path }) => {
     const raw = await adb.screenshot(device_id);
     const compressed = await compressScreenshot(raw);
     const base64 = compressed.toString("base64");
     const metadata = await sharp(compressed).metadata();
 
+    if (save_path) {
+      await adb.saveScreenshot(compressed, save_path);
+    }
+
+    const info = `Screenshot: ${metadata.width}x${metadata.height} (${Math.round(compressed.length / 1024)}KB)`;
     return {
       content: [
         { type: "image", data: base64, mimeType: "image/png" },
         {
           type: "text",
-          text: `Screenshot: ${metadata.width}x${metadata.height} (${Math.round(compressed.length / 1024)}KB)`,
+          text: save_path ? `${info}\nSaved to: ${save_path}` : info,
         },
       ],
     };
@@ -296,6 +304,12 @@ server.tool(
       "content-desc": (el) => el.contentDesc.toLowerCase().includes(value.toLowerCase()),
     };
 
+    const info = await adb.getDeviceInfo(device_id);
+    const [w, h] = info.screenSize.split("x").map(Number);
+    const centerX = Math.round(w / 2);
+    const fromY = Math.round(h * 0.7);
+    const toY = Math.round(h * 0.3);
+
     for (let i = 0; i < max_scrolls; i++) {
       const elements = await adb.getUiTree(device_id);
       const found = elements.find(finder[by]);
@@ -309,8 +323,7 @@ server.tool(
           ],
         };
       }
-      // Scroll down: swipe from center-bottom to center-top
-      await adb.swipe(540, 1600, 540, 600, 500, device_id);
+      await adb.swipe(centerX, fromY, centerX, toY, 500, device_id);
       await new Promise((r) => setTimeout(r, 500));
     }
 
@@ -425,6 +438,80 @@ server.tool(
   async ({ command, device_id }) => {
     const output = await adb.shell(command, device_id);
     return { content: [{ type: "text", text: output || "(no output)" }] };
+  },
+);
+
+// --- Diagnostics ---
+
+server.tool(
+  "get_logs",
+  "Get device logcat output. Use to find crashes, exceptions, and errors after reproducing a bug.",
+  {
+    package_name: z.string().optional().describe("Filter logs by app package name (e.g., com.example.app)"),
+    level: z
+      .enum(["V", "D", "I", "W", "E", "F"])
+      .optional()
+      .describe("Minimum log level: V(erbose), D(ebug), I(nfo), W(arn), E(rror), F(atal)"),
+    lines: z.number().optional().default(200).describe("Number of recent log lines to return (default 200)"),
+    since: z.string().optional().describe("Show logs since timestamp (e.g., '2024-01-15 10:30:00.000')"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ package_name, level, lines, since, device_id }) => {
+    const output = await adb.getLogcat({
+      packageName: package_name,
+      level,
+      lines,
+      since,
+      deviceId: device_id,
+    });
+    return {
+      content: [{ type: "text", text: output || "(no log output)" }],
+    };
+  },
+);
+
+server.tool(
+  "clear_logs",
+  "Clear the logcat buffer. Call this before reproducing a bug to get clean logs.",
+  { device_id: z.string().optional().describe("Device ID (optional if only one device)") },
+  async ({ device_id }) => {
+    await adb.clearLogcat(device_id);
+    return { content: [{ type: "text", text: "Logcat buffer cleared" }] };
+  },
+);
+
+server.tool(
+  "get_device_info",
+  "Get device details: model, manufacturer, Android version, API level, screen size, and DPI.",
+  { device_id: z.string().optional().describe("Device ID (optional if only one device)") },
+  async ({ device_id }) => {
+    const info = await adb.getDeviceInfo(device_id);
+    return {
+      content: [
+        {
+          type: "text",
+          text: [
+            `Model: ${info.manufacturer} ${info.model}`,
+            `Android: ${info.androidVersion} (API ${info.apiLevel})`,
+            `Screen: ${info.screenSize} @ ${info.density}dpi`,
+          ].join("\n"),
+        },
+      ],
+    };
+  },
+);
+
+server.tool(
+  "pull_file",
+  "Pull a file from the Android device to the local filesystem.",
+  {
+    remote_path: z.string().describe("Path on the device (e.g., /sdcard/somefile.txt)"),
+    local_path: z.string().describe("Local path to save the file to"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ remote_path, local_path, device_id }) => {
+    const result = await adb.pullFile(remote_path, local_path, device_id);
+    return { content: [{ type: "text", text: result.trim() || `Pulled ${remote_path} → ${local_path}` }] };
   },
 );
 
