@@ -1,6 +1,7 @@
 {
   "name": "android-mcp-server",
   "version": "1.2.0",
+  "mcpName": "io.github.martingeidobler/android",
   "description": "MCP server for controlling Android emulators via ADB",
   "type": "module",
   "main": "dist/index.js",
