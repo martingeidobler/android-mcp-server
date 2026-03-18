@@ -4,6 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dw/android-mcp-server)](https://www.npmjs.com/package/android-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![android-mcp-server MCP server](https://glama.ai/mcp/servers/martingeidobler/android-mcp-server/badges/score.svg)](https://glama.ai/mcp/servers/martingeidobler/android-mcp-server)
+[![Awesome MCP Servers](https://img.shields.io/badge/Awesome-MCP%20Servers-fc60a8)](https://github.com/punkpeye/awesome-mcp-servers)
 
 MCP server for controlling Android emulators and devices via ADB. Gives AI assistants the ability to see, interact with, and debug Android apps — taking screenshots, tapping elements, reading logs, and documenting bugs.
 
