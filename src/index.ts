@@ -438,18 +438,30 @@ server.tool(
             y: z.number().describe("Y coordinate"),
           }),
           z.object({
+            action: z.literal("tap_and_wait"),
+            x: z.number().describe("X coordinate"),
+            y: z.number().describe("Y coordinate"),
+            wait_ms: z.number().optional().default(1000).describe("Time to wait after tap in ms (default 1000)"),
+          }),
+          z.object({
             action: z.literal("pause"),
             ms: z.number().describe("Pause duration in milliseconds"),
           }),
         ]),
       )
-      .describe("Sequence of tap and pause actions to execute in order"),
+      .describe("Sequence of actions: tap (fire and continue), tap_and_wait (tap + settle delay), pause (fixed wait)"),
     device_id: z.string().optional().describe("Device ID (optional if only one device)"),
   },
   async ({ steps, device_id }) => {
     await adb.tapSequence(steps, device_id);
     const summary = steps
-      .map((s) => (s.action === "tap" ? `tap(${s.x},${s.y})` : `pause(${s.ms}ms)`))
+      .map((s) =>
+        s.action === "tap"
+          ? `tap(${s.x},${s.y})`
+          : s.action === "tap_and_wait"
+            ? `tap_and_wait(${s.x},${s.y},${s.wait_ms}ms)`
+            : `pause(${s.ms}ms)`,
+      )
       .join(" → ");
     return { content: [{ type: "text", text: `Executed sequence: ${summary}` }] };
   },

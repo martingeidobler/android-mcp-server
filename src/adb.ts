@@ -359,12 +359,19 @@ export class Adb {
   }
 
   async tapSequence(
-    steps: Array<{ action: "tap"; x: number; y: number } | { action: "pause"; ms: number }>,
+    steps: Array<
+      | { action: "tap"; x: number; y: number }
+      | { action: "tap_and_wait"; x: number; y: number; wait_ms?: number }
+      | { action: "pause"; ms: number }
+    >,
     deviceId?: string,
   ): Promise<void> {
     for (const step of steps) {
       if (step.action === "tap") {
         await this.tap(step.x, step.y, deviceId);
+      } else if (step.action === "tap_and_wait") {
+        await this.tap(step.x, step.y, deviceId);
+        await new Promise((r) => setTimeout(r, step.wait_ms ?? 1000));
       } else {
         await new Promise((r) => setTimeout(r, step.ms));
       }
