@@ -328,27 +328,6 @@ export class Adb {
     await this.tap(x, y, deviceId);
   }
 
-  async pinch(
-    centerX: number,
-    centerY: number,
-    startSpread: number,
-    endSpread: number,
-    durationMs = 500,
-    deviceId?: string,
-  ): Promise<void> {
-    // Two-finger pinch using ADB multi-touch sendevent
-    // Fingers start at center ± startSpread/2, move to center ± endSpread/2
-    const f1StartX = centerX - Math.round(startSpread / 2);
-    const f2StartX = centerX + Math.round(startSpread / 2);
-    const f1EndX = centerX - Math.round(endSpread / 2);
-    const f2EndX = centerX + Math.round(endSpread / 2);
-    const cmd = [
-      `input swipe ${f1StartX} ${centerY} ${f1EndX} ${centerY} ${durationMs}`,
-      `input swipe ${f2StartX} ${centerY} ${f2EndX} ${centerY} ${durationMs}`,
-    ].join(" & ");
-    await this.exec(["shell", cmd], deviceId);
-  }
-
   async multiTap(x: number, y: number, count: number, intervalMs = 100, deviceId?: string): Promise<void> {
     for (let i = 0; i < count; i++) {
       await this.tap(x, y, deviceId);

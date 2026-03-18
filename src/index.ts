@@ -388,26 +388,6 @@ server.tool(
 );
 
 server.tool(
-  "pinch",
-  "Two-finger pinch or spread gesture. Use to zoom in (spread) or zoom out (pinch) on maps, images, and zoomable views.",
-  {
-    center_x: z.number().describe("X coordinate of the gesture center"),
-    center_y: z.number().describe("Y coordinate of the gesture center"),
-    start_spread: z.number().describe("Initial distance between fingers in pixels"),
-    end_spread: z.number().describe("Final distance between fingers in pixels (larger = spread/zoom-in, smaller = pinch/zoom-out)"),
-    duration_ms: z.number().optional().default(500).describe("Gesture duration in ms (default 500)"),
-    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
-  },
-  async ({ center_x, center_y, start_spread, end_spread, duration_ms, device_id }) => {
-    await adb.pinch(center_x, center_y, start_spread, end_spread, duration_ms, device_id);
-    const gesture = end_spread > start_spread ? "spread (zoom in)" : "pinch (zoom out)";
-    return {
-      content: [{ type: "text", text: `${gesture} at (${center_x}, ${center_y}): ${start_spread}px → ${end_spread}px over ${duration_ms}ms` }],
-    };
-  },
-);
-
-server.tool(
   "multi_tap",
   "Tap at the same coordinates multiple times with a fixed interval. Use for spam-tapping, incrementing counters, or testing rapid repeat actions.",
   {

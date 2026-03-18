@@ -2,7 +2,7 @@
 
 These are real-world examples of what you can ask an AI assistant to do with this server. Each workflow is a single prompt that drives the full interaction — no manual steps required.
 
-The examples use [mcp_test_app](../mcp_test_app), a minimal Flutter app with two buttons: one that shows a popup and one that throws an error. Adapt the prompts to your own app by swapping the package name and element text.
+The examples use [mcp_test_app](../mcp_test_app), a minimal Flutter app with a counter, two popup buttons (one working, one that throws silently), and a Gesture Detector page accessible via the drawer menu. Adapt the prompts to your own app by swapping the package name and element text.
 
 See [PROMPTING.md](PROMPTING.md) for tips on writing effective prompts.
 
@@ -153,7 +153,18 @@ The app exposes 7 accessibility elements:
 
 ---
 
-## 5. Multi-Device Screenshots
+## 5. Action Chain
+
+```
+Look at the open emulator with get_ui_tree. Using tap_sequence, open the drawer menu,
+navigate to the Gesture Detector page, tap the gesture box once, wait for it to register,
+then tap it twice quickly to trigger a double tap, then long press it.
+After each gesture, read the label and tell me what was detected.
+```
+
+---
+
+## 6. Multi-Device Screenshots
 
 Take screenshots across multiple devices simultaneously and save them locally — useful for visual regression testing across screen sizes.
 
