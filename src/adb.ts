@@ -362,8 +362,12 @@ export class Adb {
     steps: Array<
       | { action: "tap"; x: number; y: number }
       | { action: "tap_and_wait"; x: number; y: number; wait_ms?: number }
+      | { action: "type_text"; text: string }
+      | { action: "press_key"; key: string }
+      | { action: "swipe"; x1: number; y1: number; x2: number; y2: number; duration_ms?: number }
       | { action: "pause"; ms: number }
     >,
+    keycodeMap: Record<string, number>,
     deviceId?: string,
   ): Promise<void> {
     for (const step of steps) {
@@ -372,6 +376,12 @@ export class Adb {
       } else if (step.action === "tap_and_wait") {
         await this.tap(step.x, step.y, deviceId);
         await new Promise((r) => setTimeout(r, step.wait_ms ?? 1000));
+      } else if (step.action === "type_text") {
+        await this.typeText(step.text, deviceId);
+      } else if (step.action === "press_key") {
+        await this.pressKey(keycodeMap[step.key], deviceId);
+      } else if (step.action === "swipe") {
+        await this.swipe(step.x1, step.y1, step.x2, step.y2, step.duration_ms, deviceId);
       } else {
         await new Promise((r) => setTimeout(r, step.ms));
       }

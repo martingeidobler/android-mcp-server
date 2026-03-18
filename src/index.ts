@@ -427,7 +427,7 @@ server.tool(
 
 server.tool(
   "tap_sequence",
-  "Execute a sequence of taps and pauses. Use for testing tap patterns, timing-sensitive interactions, or automating repeated tap flows.",
+  "Execute a multi-step action sequence. Supports taps, waits, text input, key presses, and swipes in any order.",
   {
     steps: z
       .array(
@@ -444,24 +444,47 @@ server.tool(
             wait_ms: z.number().optional().default(1000).describe("Time to wait after tap in ms (default 1000)"),
           }),
           z.object({
+            action: z.literal("type_text"),
+            text: z.string().describe("Text to type into the focused input"),
+          }),
+          z.object({
+            action: z.literal("press_key"),
+            key: z.enum([
+              "back", "home", "enter", "tab", "delete", "menu", "recent_apps",
+              "volume_up", "volume_down", "power", "search",
+              "dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center",
+            ]).describe("Key to press"),
+          }),
+          z.object({
+            action: z.literal("swipe"),
+            x1: z.number().describe("Start X"),
+            y1: z.number().describe("Start Y"),
+            x2: z.number().describe("End X"),
+            y2: z.number().describe("End Y"),
+            duration_ms: z.number().optional().default(300).describe("Swipe duration in ms (default 300)"),
+          }),
+          z.object({
             action: z.literal("pause"),
             ms: z.number().describe("Pause duration in milliseconds"),
           }),
         ]),
       )
-      .describe("Sequence of actions: tap (fire and continue), tap_and_wait (tap + settle delay), pause (fixed wait)"),
+      .describe("Steps to execute in order"),
     device_id: z.string().optional().describe("Device ID (optional if only one device)"),
   },
   async ({ steps, device_id }) => {
-    await adb.tapSequence(steps, device_id);
+    await adb.tapSequence(steps, KEYCODE_MAP, device_id);
     const summary = steps
-      .map((s) =>
-        s.action === "tap"
-          ? `tap(${s.x},${s.y})`
-          : s.action === "tap_and_wait"
-            ? `tap_and_wait(${s.x},${s.y},${s.wait_ms}ms)`
-            : `pause(${s.ms}ms)`,
-      )
+      .map((s) => {
+        switch (s.action) {
+          case "tap": return `tap(${s.x},${s.y})`;
+          case "tap_and_wait": return `tap_and_wait(${s.x},${s.y},${s.wait_ms}ms)`;
+          case "type_text": return `type_text("${s.text}")`;
+          case "press_key": return `press_key(${s.key})`;
+          case "swipe": return `swipe(${s.x1},${s.y1}→${s.x2},${s.y2})`;
+          case "pause": return `pause(${s.ms}ms)`;
+        }
+      })
       .join(" → ");
     return { content: [{ type: "text", text: `Executed sequence: ${summary}` }] };
   },
