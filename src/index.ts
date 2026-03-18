@@ -408,6 +408,24 @@ server.tool(
 );
 
 server.tool(
+  "multi_tap",
+  "Tap at the same coordinates multiple times with a fixed interval. Use for spam-tapping, incrementing counters, or testing rapid repeat actions.",
+  {
+    x: z.number().describe("X coordinate"),
+    y: z.number().describe("Y coordinate"),
+    count: z.number().int().min(1).describe("Number of taps to perform"),
+    interval_ms: z.number().optional().default(100).describe("Interval between taps in ms (default 100)"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ x, y, count, interval_ms, device_id }) => {
+    await adb.multiTap(x, y, count, interval_ms, device_id);
+    return {
+      content: [{ type: "text", text: `Tapped (${x}, ${y}) × ${count} with ${interval_ms}ms interval` }],
+    };
+  },
+);
+
+server.tool(
   "tap_sequence",
   "Execute a sequence of taps and pauses. Use for testing tap patterns, timing-sensitive interactions, or automating repeated tap flows.",
   {

@@ -349,6 +349,15 @@ export class Adb {
     await this.exec(["shell", cmd], deviceId);
   }
 
+  async multiTap(x: number, y: number, count: number, intervalMs = 100, deviceId?: string): Promise<void> {
+    for (let i = 0; i < count; i++) {
+      await this.tap(x, y, deviceId);
+      if (i < count - 1) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+      }
+    }
+  }
+
   async tapSequence(
     steps: Array<{ action: "tap"; x: number; y: number } | { action: "pause"; ms: number }>,
     deviceId?: string,
