@@ -150,3 +150,14 @@ The app exposes 7 accessibility elements:
 | Popup A (at 3) | "Counter is at 3." | "Counter is at 3." | ✅ |
 | Counter after 6 taps | Shows "6" | Shows "6" | ✅ |
 | Popup B (at 6) | Shows counter value | Throws exception silently, no dialog shown | ❌ Bug |
+
+---
+
+## 5. Multi-Device Screenshots
+
+Take screenshots across multiple devices simultaneously and save them locally — useful for visual regression testing across screen sizes.
+
+```
+List all connected devices and get their device info. Then take a screenshot on each device
+and save them to ./screenshots/[device-model].png. Do both devices in parallel if possible.
+```

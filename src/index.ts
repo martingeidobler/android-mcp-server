@@ -358,6 +358,86 @@ server.tool(
 );
 
 server.tool(
+  "long_press",
+  "Long press at screen coordinates. Useful for context menus, drag handles, and press-and-hold interactions.",
+  {
+    x: z.number().describe("X coordinate"),
+    y: z.number().describe("Y coordinate"),
+    duration_ms: z.number().optional().default(1000).describe("Hold duration in ms (default 1000)"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ x, y, duration_ms, device_id }) => {
+    await adb.longPress(x, y, duration_ms, device_id);
+    return { content: [{ type: "text", text: `Long pressed at (${x}, ${y}) for ${duration_ms}ms` }] };
+  },
+);
+
+server.tool(
+  "double_tap",
+  "Double tap at screen coordinates. Useful for zoom-in gestures and double-tap interactions.",
+  {
+    x: z.number().describe("X coordinate"),
+    y: z.number().describe("Y coordinate"),
+    interval_ms: z.number().optional().default(100).describe("Interval between taps in ms (default 100)"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ x, y, interval_ms, device_id }) => {
+    await adb.doubleTap(x, y, interval_ms, device_id);
+    return { content: [{ type: "text", text: `Double tapped at (${x}, ${y}) with ${interval_ms}ms interval` }] };
+  },
+);
+
+server.tool(
+  "pinch",
+  "Two-finger pinch or spread gesture. Use to zoom in (spread) or zoom out (pinch) on maps, images, and zoomable views.",
+  {
+    center_x: z.number().describe("X coordinate of the gesture center"),
+    center_y: z.number().describe("Y coordinate of the gesture center"),
+    start_spread: z.number().describe("Initial distance between fingers in pixels"),
+    end_spread: z.number().describe("Final distance between fingers in pixels (larger = spread/zoom-in, smaller = pinch/zoom-out)"),
+    duration_ms: z.number().optional().default(500).describe("Gesture duration in ms (default 500)"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ center_x, center_y, start_spread, end_spread, duration_ms, device_id }) => {
+    await adb.pinch(center_x, center_y, start_spread, end_spread, duration_ms, device_id);
+    const gesture = end_spread > start_spread ? "spread (zoom in)" : "pinch (zoom out)";
+    return {
+      content: [{ type: "text", text: `${gesture} at (${center_x}, ${center_y}): ${start_spread}px → ${end_spread}px over ${duration_ms}ms` }],
+    };
+  },
+);
+
+server.tool(
+  "tap_sequence",
+  "Execute a sequence of taps and pauses. Use for testing tap patterns, timing-sensitive interactions, or automating repeated tap flows.",
+  {
+    steps: z
+      .array(
+        z.discriminatedUnion("action", [
+          z.object({
+            action: z.literal("tap"),
+            x: z.number().describe("X coordinate"),
+            y: z.number().describe("Y coordinate"),
+          }),
+          z.object({
+            action: z.literal("pause"),
+            ms: z.number().describe("Pause duration in milliseconds"),
+          }),
+        ]),
+      )
+      .describe("Sequence of tap and pause actions to execute in order"),
+    device_id: z.string().optional().describe("Device ID (optional if only one device)"),
+  },
+  async ({ steps, device_id }) => {
+    await adb.tapSequence(steps, device_id);
+    const summary = steps
+      .map((s) => (s.action === "tap" ? `tap(${s.x},${s.y})` : `pause(${s.ms}ms)`))
+      .join(" → ");
+    return { content: [{ type: "text", text: `Executed sequence: ${summary}` }] };
+  },
+);
+
+server.tool(
   "scroll_to_element",
   "Scroll down repeatedly until an element matching the given criteria is visible",
   {
