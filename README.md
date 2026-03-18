@@ -234,11 +234,15 @@ claude mcp add --scope user android -- node /path/to/android-mcp-server/dist/ind
 
 ### Bug documentation
 
+<!-- TODO: Add GIF demo -->
+
 > "Clear the logs, open the settings screen, tap the save button, then show me the logs and a screenshot"
 
 Claude will: `clear_logs` → `launch_app` → `tap_element` → `get_logs(package_name="com.example.app", level="E")` → `screenshot(save_path="./bugs/settings-crash.png")`
 
 ### UI testing
+
+<!-- TODO: Add GIF demo -->
 
 > "Navigate through the login flow and verify each screen matches the designs"
 
@@ -246,9 +250,24 @@ Claude will use `screenshot` + `get_ui_tree` to see and understand each screen, 
 
 ### Smoke testing
 
+<!-- TODO: Add GIF demo -->
+
 > "Install the APK, launch the app, and tap through the main screens to check nothing crashes"
 
 Claude will: `install_apk` → `launch_app` → navigate with `tap_element` → `get_logs(level="E")` to check for errors after each screen.
+
+### Element interaction
+
+<!-- TODO: Add GIF demo -->
+
+> "Open Settings, search for 'display', tap the first result, then go back"
+
+Claude will: `launch_app(package_name="com.android.settings")` → `tap_and_wait(by="text", value="Search settings")` → `type_text("display")` → `tap_and_wait(by="text", value="Display")` → `press_key(key="back")`
+
+## Demos & Prompting Guide
+
+- **[DEMOS.md](DEMOS.md)** — copy-paste prompt scenarios you can try right now
+- **[PROMPTING.md](PROMPTING.md)** — best practices, performance tips, and common pitfalls
 
 ## How It Works
 
