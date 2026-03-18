@@ -15,6 +15,7 @@ Build and deploy the flutter app at ../mcp_test_app onto the emulator using fvm.
 Once it is deployed, verify that the app is there and describe what you see.
 Keep track of the log to check if anything goes wrong.
 ```
+![testcase1](https://github.com/user-attachments/assets/e27751df-21ef-4cda-99c5-f6d445a44ce7)
 
 **Demo response:**
 
@@ -42,6 +43,7 @@ Look at the open emulator with get_ui_tree. Click the + button 3 times, then ope
 and verify it shows the counter is at 3. Close the popup.
 Log and tell me about any errors that happen.
 ```
+![testcase2](https://github.com/user-attachments/assets/9ff2f257-8b70-4fb3-9d28-8ab5eef89f67)
 
 **Demo response:**
 
@@ -60,6 +62,7 @@ Look at the open emulator with get_ui_tree. The current state should have 3 clic
 Click the + button 3 times, then open popup b and verify it shows the counter is at 6.
 Close the popup. Log and tell me about any errors that happen.
 ```
+![testcase3](https://github.com/user-attachments/assets/8eec1a15-b2e5-4631-9318-a3b2b8f8b2b6)
 
 **Demo response:**
 
@@ -93,6 +96,7 @@ Open Popup A and again check for the counter to say 3, and close it.
 Click the + button 3 more times, check the counter to say 6, open Popup B and again
 check if it displays the number 6. Then, summarize all of your findings.
 ```
+![testcase4](https://github.com/user-attachments/assets/e440a467-3ca6-478d-ab12-9b3af1079557)
 
 **Demo response:**
 
