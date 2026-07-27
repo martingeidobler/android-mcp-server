@@ -104,8 +104,10 @@ export class Adb {
     let buffer = "";
     proc.stdout!.on("data", (chunk: Buffer) => {
       buffer += chunk.toString();
-      const markerIdx = buffer.indexOf("__MCP_DONE__");
-      if (markerIdx !== -1) {
+      // A single "data" chunk can carry several markers when commands are
+      // issued concurrently, so drain every completed response from it.
+      let markerIdx: number;
+      while ((markerIdx = buffer.indexOf("__MCP_DONE__")) !== -1) {
         const output = buffer.substring(0, markerIdx).trimEnd();
         buffer = buffer.substring(markerIdx + "__MCP_DONE__\n".length);
         const req = entry.pending.shift();
